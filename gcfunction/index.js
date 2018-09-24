@@ -1,42 +1,42 @@
-const { google } = require('googleapis')
+const { google } = require('googleapis');
+const templatePath = "gs://YOUR_BUCKETNAME/PATH/TO/TEMPLATE";
+const dataset = "fitness_data";
+const table = "apple_health";
+const jobName = "apple-health";
 
-exports.fabioArchitecture1GCFn = function (event, callback) {
+exports.launchAppleHealthDataflowJob = function (event, callback) {
     const file = event.data;
     console.log("Enter");
-    console.log(`Using file: ${JSON.stringify(file, null, 4)}`);
 
-    // file.resourceState === 'exists'
     if (!file.name) {
         console.error("No file to update");
         callback();
         return;
     }
 
-    console.log("File exists");
+    console.log(`Using file \"gs://${file.bucket}/${file.name}\"`);
+
     google.auth.getApplicationDefault(function (err, authClient, projectId) {
         if (err) {
             throw err;
         }
-        console.log("No auth errors");
 
         if (authClient.createScopedRequired && authClient.createScopedRequired()) {
-            console.log("Getting scope?");
             authClient = authClient.createScoped([
                 'https://www.googleapis.com/auth/cloud-platform',
                 'https://www.googleapis.com/auth/userinfo.email'
             ]);
         }
 
-        console.log("Got scope");
         const dataflow = google.dataflow({ version: 'v1b3', auth: authClient });
         const params = {
             projectId: projectId,
-            gcsPath: 'gs://fabio-architecture-1/templates/apple-health-template',
+            gcsPath: templatePath,
             resource: {
-                jobName: `cloud-fn-dataflow-apple-health-${makeid()}`,
+                jobName: `${jobName}-${makeid()}`,
                 parameters: {
                     input: `gs://${file.bucket}/${file.name}`,
-                    output: `fitness_data.apple_health`
+                    output: `${dataset}.${table}`
                 }
             }
         };
@@ -45,9 +45,11 @@ exports.fabioArchitecture1GCFn = function (event, callback) {
 
         dataflow.projects.templates.launch(params, function (err, response) {
             if (err) {
-                console.error("problem running dataflow template, error was: ", err);
+                console.error("Problem running dataflow template, error was: ", err);
+                throw err;
             }
-            console.log("Dataflow template response: ", response);
+
+            console.log(`Dataflow job ${params.resource.jobName} launched successfully`);
             callback();
         });
     });
@@ -55,7 +57,7 @@ exports.fabioArchitecture1GCFn = function (event, callback) {
 
 function makeid() {
     var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var possible = "abcdefghijklmnopqrstuvwxyz0123456789";
 
     for (var i = 0; i < 5; i++)
         text += possible.charAt(Math.floor(Math.random() * possible.length));
