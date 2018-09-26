@@ -1,0 +1,16 @@
+{
+  "name": "cdc_csv_to_big_query",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cdc_csv_to_big_query.js",
+  "dependencies": {
+    "@google-cloud/bigquery": "^1.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node cdc_csv_to_big_query.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
